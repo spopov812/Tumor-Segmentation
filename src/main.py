@@ -4,7 +4,7 @@ import torch
 
 from Utils.argparsing import get_args
 from Preprocessing.data_init import organized_data_download
-from Preprocessing.data_loading import get_dataloader
+from Preprocessing.data_loading import BratsDataset
 
 if __name__ == "__main__":
 
@@ -14,8 +14,4 @@ if __name__ == "__main__":
     if args['download']:
         organized_data_download(args['key_path'], args['bucket'])
 
-    # Converting data to a dataloader
-    data = get_dataloader(batch_size=args['batch_size'])
-
-    for batch in data:
-        print(batch['image'])
+    data = BratsDataset()
