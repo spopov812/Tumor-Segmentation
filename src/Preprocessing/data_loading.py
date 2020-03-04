@@ -19,39 +19,53 @@ class BratsDataset(Dataset):
         self.x = []
         self.y = []
 
-        print('Inside init')
-
         for filename in glob(os.getcwd() + "/organized_data/*/*t1.nii.gz"):
             split = filename.split('t1')
             self.extract_features(filename, split[0] + 'seg' + split[1])
 
+        print(len(self.x))
+        print(len(self.y))
+
+    """
+    Uses 3x3 sliding window and 0 padding to go through brain images and extract features using all 9
+    pixels. These features will be the features for only the central pixel.
+    """
     def extract_features(self, x_path, y_path):
 
+        # Loading and normalizing whole brain images
         x = load_nii(x_path)
         x = x / np.linalg.norm(x)
         y = load_nii(y_path)
 
+        # Padding
         x_arr = np.pad(x, ((1, 1), (1, 1), (0, 0)))
         y_arr = np.pad(y, ((1, 1), (1, 1), (0, 0)))
 
-        print(x_arr.shape)
-
         assert x_arr.shape[0] == x_arr.shape[1]
 
+        # For each 2D slice
         for depth in range(x_arr.shape[2]):
+
+            # Parameterizing sliding window
             for height, width in zip(range(x_arr.shape[0] - 2), range(x_arr.shape[1] - 2)):
 
                 feature_vec = []
 
+                # Creating sliding window across slice
                 x_window = x_arr[height : height + 3, width : width + 3, depth]
                 y_window = y_arr[height + 1, width + 1, depth]
                 
+                # Feature extraction
                 feature_vec.append(np.mean(x_window))
                 feature_vec.append(np.std(x_window))
                 feature_vec.append(np.var(x_window))
 
                 self.x.append(feature_vec)
-                self.y.append([y_window])
+
+                if y_window == 0:
+                    self.y.append([0])
+                else:
+                    self.y.append([1])
             
     """
     Number of samples that have been downloaded.
