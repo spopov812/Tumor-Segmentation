@@ -19,8 +19,8 @@ class BratsDataset(Dataset):
         self.x = []
         self.y = []
 
-        for filename in glob(os.getcwd() + "/organized_data/*/*t1.nii.gz"):
-            split = filename.split('t1')
+        for filename in glob("C:/Users/Jason/GitHub/Tumor-Segmentation/organized_data/*/*flair.nii.gz"):
+            split = filename.split('flair')
             self.extract_features(filename, split[0] + 'seg' + split[1])
 
         print(len(self.x))
@@ -38,8 +38,8 @@ class BratsDataset(Dataset):
         y = load_nii(y_path)
 
         # Padding
-        x_arr = np.pad(x, ((1, 1), (1, 1), (0, 0)))
-        y_arr = np.pad(y, ((1, 1), (1, 1), (0, 0)))
+        x_arr = np.pad(x, ((1, 1), (1, 1), (0, 0)), mode='constant')
+        y_arr = np.pad(y, ((1, 1), (1, 1), (0, 0)), mode='constant')
 
         assert x_arr.shape[0] == x_arr.shape[1]
 
@@ -47,25 +47,26 @@ class BratsDataset(Dataset):
         for depth in range(x_arr.shape[2]):
 
             # Parameterizing sliding window
-            for height, width in zip(range(x_arr.shape[0] - 2), range(x_arr.shape[1] - 2)):
+            for height in range(x_arr.shape[0] - 2):
+                for width in range(x_arr.shape[1] - 2):
 
-                feature_vec = []
+                    feature_vec = []
 
-                # Creating sliding window across slice
-                x_window = x_arr[height : height + 3, width : width + 3, depth]
-                y_window = y_arr[height + 1, width + 1, depth]
+                    # Creating sliding window across slice
+                    x_window = x_arr[height : height + 3, width : width + 3, depth]
+                    y_window = y_arr[height + 1, width + 1, depth]
                 
-                # Feature extraction
-                feature_vec.append(np.mean(x_window))
-                feature_vec.append(np.std(x_window))
-                feature_vec.append(np.var(x_window))
+                    # Feature extraction
+                    feature_vec.append(np.mean(x_window))
+                    feature_vec.append(np.std(x_window))
+                    feature_vec.append(np.var(x_window))
 
-                self.x.append(feature_vec)
+                    self.x.append(feature_vec)
 
-                if y_window == 0:
-                    self.y.append([0])
-                else:
-                    self.y.append([1])
+                    if y_window == 0:
+                        self.y.append([0])
+                    else:
+                        self.y.append([1])
             
     """
     Number of samples that have been downloaded.
